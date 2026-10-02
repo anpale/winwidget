@@ -1,0 +1,29 @@
+name: build-installer
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+      - name: Build exes and installer
+        run: ./build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BrowserAgentSetup
+          path: installer/BrowserAgentSetup.exe
+      - name: Smoke test packaged exes (Edge)
+        shell: pwsh
+        run: |
+          ./dist/console.exe start
+          ./dist/console.exe open https://example.com
+          ./dist/console.exe title
+          ./dist/console.exe screenshot
+          ./dist/console.exe quit
